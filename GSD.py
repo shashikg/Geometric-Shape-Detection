@@ -7,6 +7,8 @@ seg2shape = {
     6: "Hexagon",
     7: "Heptagon",
     8: "Octagon",
+    9: "Nonagon",
+    10: "Decagon"
 }
 
 def detect_shape(cnt):
@@ -18,24 +20,38 @@ def detect_shape(cnt):
     cx = int(M['m10']/M['m00'])
     cy = int(M['m01']/M['m00'])
 
-    if num_segments > 8:
+    if num_segments > 10:
         dist = np.asarray(approx).reshape((len(approx), -1)) - np.asarray([[cx, cy]])
         dist = dist**2
         dist = np.sqrt(dist[:,0] + dist[:,1])
-        diff = np.max(dist)-np.min(dist)
+        majorAxis = np.max(dist)
+        minorAxis = np.min(dist)
+        diff = majorAxis - minorAxis
+        a1 = cv2.contourArea(cnt)
+        a2 = np.pi*majorAxis*minorAxis
+        areaDiff = abs(a2-a1)
 
-        if diff < 6:
-            return ["Circle", cx, cy]
+        if areaDiff < 500:
+            if diff < 12:
+                return ["Circle", cx, cy]
+            else:
+                return ["Ellipse", cx, cy]
         else:
-            return ["Ellipse", cx, cy]
+            return ["None", cx, cy]
     elif num_segments > 2:
         if num_segments == 4:
-            x = np.asarray([(approx[0][0][0] - approx[1][0][0]), (approx[0][0][1] - approx[1][0][1])])
-            y = np.asarray([(approx[2][0][0] - approx[1][0][0]), (approx[2][0][1] - approx[1][0][1])])
-            cos = abs(np.sum(x*y)/np.sqrt(np.sum(x*x)*np.sum(y*y)))
+            cos = []
+            x = np.asarray([(approx[3][0][0] - approx[0][0][0]), (approx[3][0][1] - approx[0][0][1])])
+            y = np.asarray([(approx[1][0][0] - approx[0][0][0]), (approx[1][0][1] - approx[0][0][1])])
+            cos.append(abs(np.sum(x*y)/np.sqrt(np.sum(x*x)*np.sum(y*y))))
             diff = abs(np.sqrt(np.sum(x*x)) - np.sqrt(np.sum(y*y)))
 
-            if cos <0.01:
+            for i in range(1, 3):
+                x = np.asarray([(approx[i-1][0][0] - approx[i][0][0]), (approx[i-1][0][1] - approx[i][0][1])])
+                y = np.asarray([(approx[i+1][0][0] - approx[i][0][0]), (approx[i+1][0][1] - approx[i][0][1])])
+                cos.append(abs(np.sum(x*y)/np.sqrt(np.sum(x*x)*np.sum(y*y))))
+
+            if (cos[0] <0.01) and (cos[1] <0.01) and (cos[2] <0.01):
                 if diff < 6:
                     return ["Square", cx, cy]
                 else:
@@ -59,7 +75,7 @@ def find_GS(img, test_img="test", debug_flag=0):
                         cv2.imwrite("outputs/Grey_" + test_img + "_" + str(ch) + ".jpg", imgray)
         edges = cv2.Canny(imgray,100,200)
         edges = cv2.dilate(edges,kernel,iterations = 2)
-        edges = cv2.erode(edges,kernel,iterations = 1)
+        edges = cv2.erode(edges,kernel,iterations = 2)
         if debug_flag:
             cv2.imwrite("outputs/Edges_" + test_img + "_" + str(ch) + ".jpg", edges)
         final_edges += edges

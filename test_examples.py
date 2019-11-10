@@ -7,9 +7,10 @@ test_type = {
     0: "shapes_solid",
     1: "shapes_nonsolid",
     2: "shapes_dis",
+    3: "shapes_misc",
 }
 
-tt = int(input("Enter 0 for Solid Shapes Example \nEnter 1 for Non-Solid Shapes Example \nEnter 2 for Example to distinguish between Quadrilaterals and Ellipse One \n"))
+tt = int(input("Enter 0 for Solid Shapes Example \nEnter 1 for Non-Solid Shapes Example \nEnter 2 for Example to distinguish between Quadrilaterals and Ellipse One \nEnter 3 for other misc examples \n"))
 test_img = test_type[tt]
 
 img = cv2.imread(test_img + ".jpg")
